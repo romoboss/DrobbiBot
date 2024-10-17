@@ -12,7 +12,7 @@ Once the bot is created you need to copy the bot token, and on the 22nd line rep
 
 Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN", EnvironmentVariableTarget.Machine)
 
-...with quotation marks surrouding the token.
+...with quotation marks surrounding the token.
 
 
 
