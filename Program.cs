@@ -10,6 +10,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Net.Http;
 using static System.Net.WebRequestMethods;
+using System.Web;
 
 namespace DrobbiBot
 {
@@ -260,6 +261,91 @@ namespace DrobbiBot
             }
 
             await ctx.CreateResponseAsync(embed);
+        }
+
+        [SlashCommand("trivia", "Gives a random trivia question.")]
+        public async Task TriviaCommand(InteractionContext ctx)
+        {
+            HttpClient httpc = new HttpClient();
+            string apiUrl = "https://opentdb.com/api.php?amount=10&type=multiple"; // Adjusted to specify multiple type
+            var response = await httpc.GetAsync(apiUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                string json = await response.Content.ReadAsStringAsync();
+
+                using (JsonDocument doc = JsonDocument.Parse(json))
+                {
+                    var root = doc.RootElement;
+                    var result = root.GetProperty("results")[0]; // Get the first trivia question
+
+                    string category = result.GetProperty("category").GetString();
+                    string difficulty = result.GetProperty("difficulty").GetString();
+                    var question = HttpUtility.HtmlDecode(result.GetProperty("question").GetString());
+                    var correctAnswer = HttpUtility.HtmlDecode(result.GetProperty("correct_answer").GetString());
+                    var incorrectAnswers = result.GetProperty("incorrect_answers").EnumerateArray()
+                                                    .Select(a => HttpUtility.HtmlDecode(a.GetString())).ToList();
+
+                    List<string> allAnswers = new List<string>(incorrectAnswers) { correctAnswer };
+                    allAnswers = allAnswers.OrderBy(a => Guid.NewGuid()).ToList(); // Shuffle answers
+
+                    var embed = new DiscordEmbedBuilder
+                    {
+                        Title = question,
+                        Description = $"{category.ToLower()}, {difficulty.ToLower()}",
+                        Color = DiscordColor.Azure
+                    };
+
+                    string uniqueId = Guid.NewGuid().ToString();
+
+                    var buttons = new List<DiscordButtonComponent>();
+                    foreach (var answer in allAnswers)
+                    {
+                        buttons.Add(new DiscordButtonComponent(ButtonStyle.Primary, $"{uniqueId}_answer_{HttpUtility.UrlEncode(answer)}", answer)); // URL encode answer
+                    }
+
+                    await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+
+                    var webhookBuilder = new DiscordWebhookBuilder()
+                        .AddEmbed(embed)
+                        .AddComponents(buttons);
+
+                    await ctx.EditResponseAsync(webhookBuilder);
+
+                    // Move the interaction handler to a separate method to avoid multiple registrations
+                    ctx.Client.ComponentInteractionCreated += async (s, e) =>
+                    {
+                        if (e.Id.StartsWith(uniqueId) && e.User.Id == ctx.User.Id) // Compare user IDs
+                        {
+                            string selectedAnswer = HttpUtility.UrlDecode(e.Id.Substring(uniqueId.Length + 8)); // Adjust for encoding
+                            var isCorrect = selectedAnswer == correctAnswer;
+
+                            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                                new DiscordInteractionResponseBuilder()
+                                    .AddEmbed(new DiscordEmbedBuilder
+                                    {
+                                        Title = isCorrect ? "Correct" : "Incorrect",
+                                        Description = $"It was {correctAnswer}",
+                                        Color = isCorrect ? DiscordColor.DarkGreen : DiscordColor.DarkRed
+                                    }));
+
+                            // Disable buttons
+                            var disabledButtons = buttons.Select(button =>
+                                new DiscordButtonComponent(button.Style, button.CustomId, button.Label, disabled: true)).ToList();
+
+                            var updatedMessage = new DiscordWebhookBuilder()
+                                .AddEmbed(embed)
+                                .AddComponents(disabledButtons);
+
+                            await ctx.EditResponseAsync(updatedMessage);
+                        }
+                    };
+                }
+            }
+            else
+            {
+                await ctx.CreateResponseAsync("Couldn't fetch a question at the moment!");
+            }
         }
     }
 }
