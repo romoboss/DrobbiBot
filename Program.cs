@@ -94,7 +94,7 @@ namespace DrobbiBot
                     {
                         Title = "Here's a Joke for You!",
                         Description = setup + "\n||" + punchline + "||",
-                        Color = DiscordColor.Turquoise
+                        Color = DiscordColor.Yellow
                     };
 
                     await ctx.CreateResponseAsync(embed);
@@ -159,7 +159,7 @@ namespace DrobbiBot
                 {
                     Title = "Random Cat",
                     ImageUrl = imageUrl,
-                    Color = DiscordColor.Turquoise
+                    Color = DiscordColor.Gray
                 };
 
                 await ctx.CreateResponseAsync(embed);
@@ -192,7 +192,7 @@ namespace DrobbiBot
                 {
                     Title = "Random Dog",
                     ImageUrl = imageUrl,
-                    Color = DiscordColor.Turquoise
+                    Color = DiscordColor.Green
                 };
 
                 await ctx.CreateResponseAsync(embed);
@@ -201,6 +201,65 @@ namespace DrobbiBot
             {
                 await ctx.CreateResponseAsync("Couldn't fetch a dog at the moment!");
             }
+        }
+
+        [SlashCommand("coinflip", "Flip a coin.")]
+        public async Task CoinflipCommand(InteractionContext ctx)
+        {
+            var embed = new DiscordEmbedBuilder{};
+            Random random = new Random();
+            if (random.Next(1, 3) == 1)
+            {
+                embed = new DiscordEmbedBuilder
+                {
+                    Title = "Heads",
+                    Description = "The coin landed on Heads!",
+                    Color = DiscordColor.Red
+                };
+            }
+            else
+            {
+                embed = new DiscordEmbedBuilder
+                {
+                    Title = "Tails",
+                    Description = "The coin landed on Tails!",
+                    Color = DiscordColor.Blue
+                };
+            }
+
+            await ctx.CreateResponseAsync(embed);
+        }
+
+        [SlashCommand("randomnumber", "Gives a random number.")]
+        public async Task RandomNumberCommand(InteractionContext ctx,
+                              [Option("minimum", "The smallest amount it can give you.")] long minimum,
+                              [Option("maximum", "The largest amount it can give you.")] long maximum)
+        {
+            var embed = new DiscordEmbedBuilder{};
+
+            if (minimum >= int.MinValue && minimum <= int.MaxValue && maximum >= int.MinValue && maximum <= int.MaxValue && minimum < maximum)
+            {
+                Random random = new Random();
+                int randomnumber = random.Next((int)minimum, (int)maximum + 1);
+
+                embed = new DiscordEmbedBuilder
+                {
+                    Title = randomnumber.ToString(),
+                    Description = $"A random number between {minimum} and {maximum} ended up being {randomnumber}!",
+                    Color = DiscordColor.Purple
+                };
+            }  
+            else
+            {
+                embed = new DiscordEmbedBuilder
+                {
+                    Title = "Error :(",
+                    Description = $"There has been an error while trying to find a random number between {minimum} and {maximum}",
+                    Color = DiscordColor.Purple
+                };
+            }
+
+            await ctx.CreateResponseAsync(embed);
         }
     }
 }
