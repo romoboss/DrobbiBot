@@ -156,18 +156,18 @@ namespace DrobbiBot
         [SlashCommand("cat", "Gives a random cat picture.")]
         public async Task CatCommand(InteractionContext ctx)
         {
+            Random random = new Random();
             HttpClient httpc = new HttpClient();
-            string apiUrl = "https://cataas.com/cat";
+            string apiUrl = "https://cataas.com/cat?" + random.Next(1,int.MaxValue);
             var response = await httpc.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
             {
-                var imageUrl = "https://cataas.com/cat";
 
                 var embed = new DiscordEmbedBuilder
                 {
                     Title = "Random Cat",
-                    ImageUrl = imageUrl,
+                    ImageUrl = apiUrl,
                     Color = DiscordColor.Gray
                 };
 
@@ -354,6 +354,28 @@ namespace DrobbiBot
             {
                 await ctx.CreateResponseAsync("Couldn't fetch a question at the moment!");
             }
+        }
+
+        [SlashCommand("banana", "If life gives you bananas, you have bananas.")]
+        public async Task BananaCommand(InteractionContext ctx)
+        {
+            var embed = new DiscordEmbedBuilder { };
+            Random random = new Random();
+            string description = "";
+
+            for (int i = 0; i < random.Next(1,10); i++) 
+            {
+                description += ":banana:";
+            }
+
+            embed = new DiscordEmbedBuilder
+            {
+                Title = "BANANA",
+                Description = description,
+                Color = DiscordColor.Yellow
+            };
+
+            await ctx.CreateResponseAsync(embed);
         }
     }
 }
