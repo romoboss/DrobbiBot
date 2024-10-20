@@ -18,9 +18,17 @@ namespace DrobbiBot
     {
         public static async Task Main(string[] args)
         {
+            string token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN", EnvironmentVariableTarget.Machine);
+
+            if (token == string.Empty || token == null)
+            {
+                Console.WriteLine("Enter Bot Token");
+                token = Console.ReadLine();
+            }
+
             var discord = new DiscordClient(new DiscordConfiguration
             {
-                Token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN", EnvironmentVariableTarget.Machine),
+                Token = token,
                 TokenType = TokenType.Bot,
                 Intents = DiscordIntents.AllUnprivileged
             });
