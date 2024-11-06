@@ -5,18 +5,22 @@ using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using DSharpPlus.Entities;
 using Newtonsoft.Json;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Diagnostics;
-using System.Net.Http;
-using static System.Net.WebRequestMethods;
 using System.Web;
+using DSharpPlus.EventArgs;
+using System.Diagnostics;
 
 namespace DrobbiBot
 {
+
     class Program
     {
-        public static async Task Main(string[] args)
+        public static float Tries = 1;
+        public static int TriesFull = 1;
+
+        public static bool AutoRestart = true;
+
+        private static async Task InitializeDiscordClientAsync()
         {
             string token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN", EnvironmentVariableTarget.Machine);
 
@@ -30,20 +34,95 @@ namespace DrobbiBot
             {
                 Token = token,
                 TokenType = TokenType.Bot,
-                Intents = DiscordIntents.AllUnprivileged
+                Intents = DiscordIntents.AllUnprivileged,
+                AutoReconnect = false
             });
+
+            discord.ClientErrored += OnClientError;
+            discord.SocketErrored += OnSocketError;
 
             var slashCommands = discord.UseSlashCommands();
             slashCommands.RegisterCommands<MySlashCommands>();
-
             discord.Ready += OnReady;
 
             await discord.ConnectAsync();
 
+            var consoleOutput = new StringWriter();
+            var originOut = Console.Out;
+            while (AutoRestart)
+            {
+                Console.SetOut(consoleOutput);
+                var output = consoleOutput.ToString();
+                if (output.Contains("terminated"))
+                {
+                    await Main();
+                    return;
+
+                }
+                await Task.Delay(5000);
+            }
             await Task.Delay(-1);
         }
 
-        private static Task OnReady(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
+        private static async Task OnClientError(DiscordClient sender, ClientErrorEventArgs e)
+        {
+            Console.WriteLine($"Error, Retrying in {(int)MathF.Round(5 * Tries)} seconds! ({TriesFull})");
+            await Task.Delay((int)MathF.Round(5000 * Tries));
+            TriesFull++;
+            Tries *= 1.2f;
+
+            if (TriesFull >= 1) 
+            {
+               return;
+            }
+
+
+            await InitializeDiscordClientAsync();
+            return;
+        }
+
+        private static async Task OnSocketError(DiscordClient sender, SocketErrorEventArgs e)
+        {
+            Console.WriteLine($"Error, Retrying in {(int)MathF.Round(5 * Tries)} seconds! ({TriesFull})");
+            await Task.Delay((int)MathF.Round(5000 * Tries));
+            TriesFull++;
+            Tries *= 1.2f;
+
+            if (TriesFull >= 1)
+            {
+                return;
+            }
+
+
+            await InitializeDiscordClientAsync();
+            return;
+        }
+
+        public static async Task Main()
+        {
+            try
+            {
+                await InitializeDiscordClientAsync();
+            }
+            catch
+            {
+                Console.WriteLine($"Error, Retrying in {(int)MathF.Round(5 * Tries)} seconds! ({TriesFull})");
+                await Task.Delay((int)MathF.Round(5000 * Tries));
+                TriesFull++;
+                Tries *= 1.2f;
+
+                if (TriesFull >= 20)
+                {
+                    return;
+                }
+
+
+                await Main();
+                return;
+            }
+        }
+
+        private static Task OnReady(DiscordClient sender, ReadyEventArgs e)
         {
             Console.WriteLine("Bot is connected and ready!");
             return Task.CompletedTask;
@@ -156,18 +235,24 @@ namespace DrobbiBot
         [SlashCommand("cat", "Gives a random cat picture.")]
         public async Task CatCommand(InteractionContext ctx)
         {
-            Random random = new Random();
             HttpClient httpc = new HttpClient();
-            string apiUrl = "https://cataas.com/cat?" + random.Next(1,int.MaxValue);
+            string apiUrl = "https://cataas.com/cat?json=true";
             var response = await httpc.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
             {
+                string json = await response.Content.ReadAsStringAsync();
+                var imageUrl = string.Empty;
+                using (JsonDocument doc = JsonDocument.Parse(json))
+                {
+                    var root = doc.RootElement;
+                    imageUrl = "https://cataas.com/cat/" + root.GetProperty("_id").GetString();
+                }
 
                 var embed = new DiscordEmbedBuilder
                 {
                     Title = "Random Cat",
-                    ImageUrl = apiUrl,
+                    ImageUrl = imageUrl,
                     Color = DiscordColor.Gray
                 };
 
