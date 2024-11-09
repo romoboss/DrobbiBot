@@ -15,6 +15,8 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up .NET
+        env:
+          DOTNET_INSTALL_DIR: "homa/romoboss/Documents/.NET"
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '7.0.x'  # Adjust to match your .NET version
