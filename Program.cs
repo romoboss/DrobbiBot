@@ -25,7 +25,7 @@ namespace DrobbiBot
             string token = Environment.GetEnvironmentVariable("DISCORD_BOT_TOKEN", EnvironmentVariableTarget.Machine);
 
             if (token == string.Empty || token == null)
-                token = Environment.GetEnvironmentVariable("DISCORD_TOKEN")
+                token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
             {
             
             if (token == string.Empty || token == null)
