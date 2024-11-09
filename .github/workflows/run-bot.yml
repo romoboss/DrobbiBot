@@ -1,0 +1,31 @@
+name: Run Discord Bot
+
+on:
+  push:
+    branches:
+      - main  # Change to the branch where you want this action to trigger
+  workflow_dispatch: # Allows you to run the workflow manually from GitHub
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest  # You can also use self-hosted runner if set up
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'  # Adjust to match your .NET version
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build the project
+        run: dotnet build --configuration Release
+
+      - name: Run the bot
+        run: dotnet run --project <YourProjectFolder/YourBotProject.csproj>
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
