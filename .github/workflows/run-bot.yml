@@ -26,6 +26,6 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Run the bot
-        run: dotnet run --project <YourProjectFolder/YourBotProject.csproj>
+        run: dotnet run --project DrobbiBot.csproj
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
