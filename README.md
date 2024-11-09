@@ -6,7 +6,7 @@ In order to use this bot you need to have a bot token. To get a token you neeed 
 
 # Use Intructions
 
-0. Download Visual Studio (not Visual Studio Code) if you haven't already
+0. Download Visual Studio (or Visual Studio Code) if you haven't already
 1. Download Program.cs and DrobbiBot.csproj
 2. Put the files in a folder
 3. Open the folder using Visual Studio
