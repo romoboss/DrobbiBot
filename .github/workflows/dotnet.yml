@@ -35,27 +35,3 @@ jobs:
       # Run tests
       - name: Test
         run: dotnet test --no-build --configuration Release
-        
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build  # Runs after the "build" job is successful
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '7.0.x'
-
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}  # Set up in GitHub Secrets
-
-    - name: Publish to Azure Web App
-      run: |
-        dotnet publish -c Release -o ./publish
-        az webapp deploy --resource-group <RESOURCE_GROUP> --name <WEB_APP_NAME> --src-path ./publish
-
