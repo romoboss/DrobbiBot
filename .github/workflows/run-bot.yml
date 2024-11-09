@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-run:
-    runs-on: ubuntu-latest  # You can also use self-hosted runner if set up
+    runs-on: self-hosted  # You can also use self-hosted runner if set up
 
     steps:
       - name: Checkout code
