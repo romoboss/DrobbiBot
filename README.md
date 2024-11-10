@@ -11,3 +11,10 @@ In order to use this bot you need to have a bot token. To get a token you neeed 
 2. Put the files in a folder
 3. Open the folder using Visual Studio
 4. Run Program.cs
+
+# Credits
+
+/cat command API: cataas.com
+/dog command API: dog.ceo
+/joke command API: official-joke-api.appspot.com
+/trivia command API: opentdb.com
