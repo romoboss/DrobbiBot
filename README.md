@@ -14,7 +14,7 @@ In order to use this bot you need to have a bot token. To get a token you neeed 
 
 # Credits
 
- /cat command API: cataas.com
- /dog command API: dog.ceo
- /joke command API: official-joke-api.appspot.com
- /trivia command API: opentdb.com
+- /cat command API: https://cataas.com/
+- /dog command API: https://dog.ceo/
+- /joke command API: https://official-joke-api.appspot.com/
+- /trivia command API: https://opentdb.com/
