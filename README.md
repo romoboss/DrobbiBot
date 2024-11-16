@@ -18,3 +18,4 @@ In order to use this bot you need to have a bot token. To get a token you neeed 
 - **/dog** command API: https://dog.ceo/
 - **/joke** command API: https://official-joke-api.appspot.com/
 - **/trivia** command API: https://opentdb.com/
+- **/riddle** command API: https://riddles-api.vercel.app/

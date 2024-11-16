@@ -132,6 +132,22 @@ namespace DrobbiBot
             Console.WriteLine("Bot is connected and ready!");
             return Task.CompletedTask;
         }
+
+        public static string StyleSentance(string sectance, string customending)
+        {
+            string firstchar = sectance[0].ToString();
+            sectance = sectance.Remove(0, 1);
+            sectance = firstchar.ToUpper() + sectance;
+
+            if (!sectance.EndsWith(".") && !sectance.EndsWith("!") && !sectance.EndsWith("?"))
+            {
+                if (customending == null)
+                    sectance = sectance + "!";
+                else 
+                    sectance = sectance + customending;
+            }
+            return sectance;
+        }
     }
 
     public class MySlashCommands : ApplicationCommandModule
@@ -365,7 +381,7 @@ namespace DrobbiBot
         public async Task TriviaCommand(InteractionContext ctx)
         {
             HttpClient httpc = new HttpClient();
-            string apiUrl = "https://opentdb.com/api.php?amount=10&type=multiple"; // Adjusted to specify multiple type
+            string apiUrl = "https://opentdb.com/api.php?amount=10&type=multiple";
             var response = await httpc.GetAsync(apiUrl);
 
             if (response.IsSuccessStatusCode)
@@ -375,7 +391,7 @@ namespace DrobbiBot
                 using (JsonDocument doc = JsonDocument.Parse(json))
                 {
                     var root = doc.RootElement;
-                    var result = root.GetProperty("results")[0]; // Get the first trivia question
+                    var result = root.GetProperty("results")[0];
 
                     string category = result.GetProperty("category").GetString();
                     string difficulty = result.GetProperty("difficulty").GetString();
@@ -385,7 +401,7 @@ namespace DrobbiBot
                                                     .Select(a => HttpUtility.HtmlDecode(a.GetString())).ToList();
 
                     List<string> allAnswers = new List<string>(incorrectAnswers) { correctAnswer };
-                    allAnswers = allAnswers.OrderBy(a => Guid.NewGuid()).ToList(); // Shuffle answers
+                    allAnswers = allAnswers.OrderBy(a => Guid.NewGuid()).ToList();
 
                     var embed = new DiscordEmbedBuilder
                     {
@@ -399,7 +415,7 @@ namespace DrobbiBot
                     var buttons = new List<DiscordButtonComponent>();
                     foreach (var answer in allAnswers)
                     {
-                        buttons.Add(new DiscordButtonComponent(ButtonStyle.Primary, $"{uniqueId}_answer_{HttpUtility.UrlEncode(answer)}", answer)); // URL encode answer
+                        buttons.Add(new DiscordButtonComponent(ButtonStyle.Primary, $"{uniqueId}_answer_{HttpUtility.UrlEncode(answer)}", answer));
                     }
 
                     await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
@@ -410,12 +426,11 @@ namespace DrobbiBot
 
                     await ctx.EditResponseAsync(webhookBuilder);
 
-                    // Move the interaction handler to a separate method to avoid multiple registrations
                     ctx.Client.ComponentInteractionCreated += async (s, e) =>
                     {
-                        if (e.Id.StartsWith(uniqueId) && e.User.Id == ctx.User.Id) // Compare user IDs
+                        if (e.Id.StartsWith(uniqueId) && e.User.Id == ctx.User.Id)
                         {
-                            string selectedAnswer = HttpUtility.UrlDecode(e.Id.Substring(uniqueId.Length + 8)); // Adjust for encoding
+                            string selectedAnswer = HttpUtility.UrlDecode(e.Id.Substring(uniqueId.Length + 8));
                             var isCorrect = selectedAnswer == correctAnswer;
 
                             await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
@@ -427,7 +442,6 @@ namespace DrobbiBot
                                         Color = isCorrect ? DiscordColor.DarkGreen : DiscordColor.DarkRed
                                     }));
 
-                            // Disable buttons
                             var disabledButtons = buttons.Select(button =>
                                 new DiscordButtonComponent(button.Style, button.CustomId, button.Label, disabled: true)).ToList();
 
@@ -466,6 +480,73 @@ namespace DrobbiBot
             };
 
             await ctx.CreateResponseAsync(embed);
+        }
+
+        [SlashCommand("riddle", "Gives a random riddle.")]
+        public async Task RiddleCommand(InteractionContext ctx)
+        {
+            HttpClient httpc = new HttpClient();
+            string apiUrl = "https://riddles-api.vercel.app/random";
+            var response = await httpc.GetAsync(apiUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                string json = await response.Content.ReadAsStringAsync();
+
+                using (JsonDocument doc = JsonDocument.Parse(json))
+                {
+                    var root = doc.RootElement;
+                    var riddle = root.GetProperty("riddle").ToString();
+                    var answer = root.GetProperty("answer").ToString();
+
+                    answer = Program.StyleSentance(answer, "!");
+                    riddle = Program.StyleSentance(riddle, "?");
+
+                    var embed = new DiscordEmbedBuilder
+                    {
+                        Title = "Try to Solve this Riddle!",
+                        Description = riddle,
+                        Color = DiscordColor.Chartreuse
+                    };
+
+                    string uniqueId = Guid.NewGuid().ToString();
+
+                    DiscordButtonComponent button = new DiscordButtonComponent(ButtonStyle.Primary, $"{uniqueId}_riddle_button", "Show the Answer");
+
+                    await ctx.CreateResponseAsync(InteractionResponseType.DeferredChannelMessageWithSource);
+
+                    var webhookBuilder = new DiscordWebhookBuilder()
+                        .AddEmbed(embed)
+                        .AddComponents(button);
+
+                    await ctx.EditResponseAsync(webhookBuilder);
+
+                    ctx.Client.ComponentInteractionCreated += async (s, e) =>
+                    {
+                        if (e.Id == $"{uniqueId}_riddle_button" && e.User.Id == ctx.User.Id)
+                        {
+                            await e.Interaction.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                            new DiscordInteractionResponseBuilder()
+                                    .AddEmbed(new DiscordEmbedBuilder
+                                    {
+                                        Title = answer,
+                                        Description = new Random().Next(0, 2) == 1 ? "That's what I thought!" : "I didn't see that one comming!",
+                                        Color = DiscordColor.Chartreuse
+                                    }));
+
+                            webhookBuilder = new DiscordWebhookBuilder()
+                            .AddEmbed(embed)
+                            .AddComponents(new DiscordButtonComponent(ButtonStyle.Primary, $"{uniqueId}_riddle_button", "Show the Answer", true));
+
+                            await ctx.EditResponseAsync(webhookBuilder);
+                        }
+                    };
+                }
+            }
+            else
+            {
+                await ctx.CreateResponseAsync("Couldn't fetch a riddle at the moment!");
+            }
         }
     }
 }
