@@ -27,7 +27,7 @@ jobs:
       - name: Build the project
         run: dotnet build --configuration Release
 
-      - name: Run the bot
-        run: dotnet run --project DrobbiBot.csproj
+      - name: Run the bot in background
+        run: nohup dotnet run --project MyBot/MyBot.csproj > bot.log 2>&1 &
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
