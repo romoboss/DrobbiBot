@@ -3,13 +3,11 @@ name: Run Discord Bot
 on:
   push:
     branches:
-      - main  # Change to the branch where you want this action to trigger
-  workflow_dispatch: # Allows you to run the workflow manually from GitHub
-
+      - main 
+  workflow_dispatch: 
 jobs:
   build-and-run:
-    runs-on: self-hosted  # You can also use self-hosted runner if set up
-
+    runs-on: self-hosted 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -19,7 +17,7 @@ jobs:
           DOTNET_INSTALL_DIR: "/home/romoboss/Documents/.NET"
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'  # Adjust to match your .NET version
+          dotnet-version: '8.0.x'
 
       - name: Install dependencies
         run: dotnet restore
@@ -27,9 +25,7 @@ jobs:
       - name: Build the project
         run: dotnet build --configuration Release
 
-      - name: Run the bot in a tmux session
-        run: |
-          tmux new-session -d -s bot "dotnt run --project DrobbiBot.csproj > bot.log"
-          echo "Bot is running in a detached tmux session."
+      - name: Run the bot
+        run: dotnet run --project DrobbiBot.csproj > bot.log
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
