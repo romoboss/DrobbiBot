@@ -16,7 +16,7 @@ jobs:
 
       - name: Set up .NET
         env:
-          DOTNET_INSTALL_DIR: "home/romoboss/Documents/.NET"
+          DOTNET_INSTALL_DIR: "/home/romoboss/Documents/.NET"
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'  # Adjust to match your .NET version
@@ -28,6 +28,6 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Run the bot in background
-        run: nohup dotnet run --project MyBot/MyBot.csproj > bot.log 2>&1 &
+        run: nohup dotnet run --project DrobbiBot.csproj > bot.log 2>&1 &
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
