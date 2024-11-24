@@ -27,7 +27,9 @@ jobs:
       - name: Build the project
         run: dotnet build --configuration Release
 
-      - name: Run the bot in background
-        run: nohup dotnet run --project DrobbiBot.csproj > bot.log
+      - name: Run the bot in a tmux session
+        run: |
+          tmux new-session -d -s bot "dotnet run --project DrobbiBot.csproj"
+          echo "Bot is running in a detached tmux session."
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
