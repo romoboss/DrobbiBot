@@ -29,7 +29,7 @@ jobs:
 
       - name: Run the bot in a tmux session
         run: |
-          tmux new-session -d -s bot "dotnet run --project DrobbiBot.csproj"
+          tmux new-session -d -s bot "dotnet run --project DrobbiBot.csproj > bot.log"
           echo "Bot is running in a detached tmux session."
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
