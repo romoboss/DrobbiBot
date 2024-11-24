@@ -28,6 +28,6 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Run the bot in background
-        run: dotnet run --project DrobbiBot.csproj > bot.log 2>&1 &
+        run: nohup dotnet run --project DrobbiBot.csproj > bot.log
         env:
           DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
